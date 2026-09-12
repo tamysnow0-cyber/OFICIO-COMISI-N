@@ -25,14 +25,16 @@ with st.form("formulario_oficio"):
     num_empleado = st.number_input("1. Número de Empleado:", min_value=1, step=1, format="%d")
     placa_input = st.text_input("2. Placas de la unidad que ocuparás (Ej. HM4036G):").strip().upper()
     lugar_motivo = st.text_area("3. ¿Hacia dónde te diriges y en qué fecha? (Ej. Secretaría de Finanzas, 12 de septiembre):")
-    hora_salida = st.text_input("4. Hora de salida (Ej. 14:00 hrs):").strip()
+    
+    # NUEVO: Selector de hora con relojito
+    hora_salida = st.time_input("4. Selecciona tu hora de salida:")
     
     # Botón para enviar el formulario
     generar = st.form_submit_button("Generar Oficio")
 
 # 4. Lógica que se ejecuta al presionar el botón
 if generar:
-    if not num_empleado or not placa_input or not lugar_motivo or not hora_salida:
+    if not num_empleado or not placa_input or not lugar_motivo:
         st.warning("⚠️ Por favor, llena todos los campos antes de generar el oficio.")
     else:
         # Buscar empleado
@@ -49,9 +51,12 @@ if generar:
             datos_emp = empleado_data.iloc[0]
             datos_veh = vehiculo_data.iloc[0]
             
-            # Fecha y hora actual
+            # Fecha actual
             ahora = datetime.now()
             fecha_actual = ahora.strftime("%d/%m/%Y") 
+            
+            # Convertir la hora del relojito a formato 24 hrs estricto (HH:MM)
+            hora_formateada = hora_salida.strftime("%H:%M")
             
             modelo = str(datos_veh['Modelo'])
             if modelo.endswith('.0'):
@@ -68,7 +73,9 @@ if generar:
                 '[Modelo]': modelo,
                 '[Placa]': str(datos_veh['placa']), 
                 '[Lugar al que asistirá y Fecha en dia y mes]': lugar_motivo,
-                '[Hora de salida]': hora_salida
+                
+                # Aquí el código busca la etiqueta exacta que tienes en tu Word
+                '[Horario en tiempo real]': hora_formateada
             }
             
             try:

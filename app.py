@@ -4,12 +4,10 @@ from docx import Document
 from datetime import datetime
 import io
 
-# 1. Configuración de la página
 st.set_page_config(page_title="Generador de Oficios", page_icon="🚗")
 st.title("🚗 Generador Automático de Oficios de Comisión")
 st.write("Llena los siguientes datos para descargar tu oficio de forma inmediata.")
 
-# 2. Cargar la base de datos (con caché)
 @st.cache_data
 def cargar_datos():
     return pd.read_excel('Información del empleado.xlsx')
@@ -20,18 +18,14 @@ except Exception as e:
     st.error("❌ No se pudo cargar la base de datos. Verifica los archivos.")
     st.stop()
 
-# 3. Interfaz de usuario
 with st.form("formulario_oficio"):
     num_empleado = st.number_input("1. Número de Empleado:", min_value=1, step=1, format="%d")
     placa_input = st.text_input("2. Placas de la unidad que ocuparás (Ej. HM4036G):").strip().upper()
     lugar_input = st.text_input("3. ¿A qué lugar asistirás y en qué fecha? (Ej. Mercado de Pachuca, 12 de septiembre):").strip()
     motivo_input = st.text_input("4. ¿Cuál es la finalidad de la comisión? (Ej. entregar correspondencia):").strip()
     hora_salida = st.time_input("5. Selecciona tu hora de salida:")
-    
-    # Botón para enviar
     generar = st.form_submit_button("Generar Oficio")
 
-# 4. Lógica de generación
 if generar:
     if not num_empleado or not placa_input or not lugar_input or not motivo_input:
         st.warning("⚠️ Por favor, llena todos los campos antes de generar el oficio.")
@@ -47,12 +41,9 @@ if generar:
             datos_emp = empleado_data.iloc[0]
             datos_veh = vehiculo_data.iloc[0]
             
-            # Crear la fecha en formato largo (Ej. 12 de septiembre de 2026)
             meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
             ahora = datetime.now()
             fecha_larga = f"{ahora.day} de {meses[ahora.month - 1]} de {ahora.year}"
-            
-            # Formato de 24 horas
             hora_formateada = hora_salida.strftime("%H:%M")
             
             modelo = str(datos_veh['Modelo'])
@@ -60,7 +51,7 @@ if generar:
                 modelo = modelo[:-2]
                 
             reemplazos = {
-                '[dia, mes, año]': fecha_larga,
+                '[día, mes, año]': fecha_larga, # <-- Acento corregido
                 '[Nombre]': str(datos_emp['Nombre']),
                 '[Adscripción]': str(datos_emp['Adscripción']),
                 '[Puesto]': str(datos_emp['Puesto']),
@@ -76,10 +67,21 @@ if generar:
             
             try:
                 doc = Document('OFICIO COMISIÓN 2026_2.docx')
+                
+                # 1. Buscar en párrafos normales
                 for parrafo in doc.paragraphs:
                     for etiqueta, valor_real in reemplazos.items():
                         if etiqueta in parrafo.text:
                             parrafo.text = parrafo.text.replace(etiqueta, valor_real)
+                
+                # 2. Buscar dentro de las tablas (para las firmas)
+                for tabla in doc.tables:
+                    for fila in tabla.rows:
+                        for celda in fila.cells:
+                            for parrafo in celda.paragraphs:
+                                for etiqueta, valor_real in reemplazos.items():
+                                    if etiqueta in parrafo.text:
+                                        parrafo.text = parrafo.text.replace(etiqueta, valor_real)
                 
                 bio = io.BytesIO()
                 doc.save(bio)
@@ -93,4 +95,4 @@ if generar:
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
             except Exception as e:
-                st.error(f"❌ Ocurrió un error al procesar la plantilla: {e}")
+                st.error(f"❌ Ocurrió un error al procesar la plantilla: {e}")or(f"❌ Ocurrió un error al procesar la plantilla: {e}")

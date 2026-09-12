@@ -25,13 +25,14 @@ with st.form("formulario_oficio"):
     num_empleado = st.number_input("1. Número de Empleado:", min_value=1, step=1, format="%d")
     placa_input = st.text_input("2. Placas de la unidad que ocuparás (Ej. HM4036G):").strip().upper()
     lugar_motivo = st.text_area("3. ¿Hacia dónde te diriges y en qué fecha? (Ej. Secretaría de Finanzas, 12 de septiembre):")
+    hora_salida = st.text_input("4. Hora de salida (Ej. 14:00 hrs):").strip()
     
     # Botón para enviar el formulario
     generar = st.form_submit_button("Generar Oficio")
 
 # 4. Lógica que se ejecuta al presionar el botón
 if generar:
-    if not num_empleado or not placa_input or not lugar_motivo:
+    if not num_empleado or not placa_input or not lugar_motivo or not hora_salida:
         st.warning("⚠️ Por favor, llena todos los campos antes de generar el oficio.")
     else:
         # Buscar empleado
@@ -51,7 +52,6 @@ if generar:
             # Fecha y hora actual
             ahora = datetime.now()
             fecha_actual = ahora.strftime("%d/%m/%Y") 
-            hora_actual = ahora.strftime("%H:%M")
             
             modelo = str(datos_veh['Modelo'])
             if modelo.endswith('.0'):
@@ -67,8 +67,8 @@ if generar:
                 '[Unidad]': str(datos_veh['Unidad']),
                 '[Modelo]': modelo,
                 '[Placa]': str(datos_veh['placa']), 
-                '[Horario en tiempo real]': hora_actual,
-                '[Lugar al que asistirá y Fecha en dia y mes]': lugar_motivo
+                '[Lugar al que asistirá y Fecha en dia y mes]': lugar_motivo,
+                '[Hora de salida]': hora_salida
             }
             
             try:
